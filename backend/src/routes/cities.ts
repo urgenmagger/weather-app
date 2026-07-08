@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import prisma from '../lib/prisma'
+import { fetchWeatherForCity } from '../services/weather'
 
 const router = Router()
 
@@ -100,6 +101,38 @@ router.delete('/:id', async (req: Request, res: Response) => {
     res.status(204).send()
   } catch {
     res.status(404).json({ error: 'city not found' })
+  }
+})
+
+router.post('/:id/sync', async (req: Request, res: Response) => {
+  const id = Number(req.params.id)
+  if (isNaN(id)) {
+    res.status(400).json({ error: 'invalid id' })
+    return
+  }
+
+  const city = await prisma.city.findUnique({ where: { id } })
+  if (!city) {
+    res.status(404).json({ error: 'city not found' })
+    return
+  }
+
+  try {
+    const weather = await fetchWeatherForCity(city.latitude, city.longitude)
+    await prisma.weather.create({
+      data: {
+        cityId: city.id,
+        temperature: weather.temperature,
+        windSpeed: weather.windSpeed,
+        weatherCode: weather.weatherCode,
+        rawData: weather,
+      },
+    })
+    await prisma.syncLog.create({ data: { success: true } })
+    res.json({ synced: 1 })
+  } catch {
+    await prisma.syncLog.create({ data: { success: false } })
+    res.status(500).json({ error: 'sync failed' })
   }
 })
 

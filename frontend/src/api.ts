@@ -1,6 +1,6 @@
 import type { City, GeoResult, CitiesResponse } from './types'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_URL = import.meta.env.VITE_API_URL ?? ''
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, options)
@@ -38,4 +38,8 @@ export async function searchGeo(query: string): Promise<GeoResult[]> {
 
 export async function syncWeather(): Promise<{ synced: number }> {
   return request<{ synced: number }>('/api/sync', { method: 'POST' })
+}
+
+export async function syncCity(id: number): Promise<{ synced: number }> {
+  return request<{ synced: number }>(`/api/cities/${id}/sync`, { method: 'POST' })
 }

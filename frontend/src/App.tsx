@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import CitySearch from './components/CitySearch'
-import { fetchCities, addCity, deleteCity, syncWeather } from './api'
+import { fetchCities, addCity, deleteCity, syncWeather, syncCity } from './api'
 import type { City, GeoResult } from './types'
 import { WEATHER_EMOJI, weatherDescription } from './types'
 
@@ -25,7 +25,7 @@ function App() {
       longitude: geo.longitude,
     })
     setCities((prev) => [...prev, city])
-    syncWeather().then(() => loadCities())
+    syncCity(city.id).then(() => loadCities())
   }
 
   async function handleDelete(id: number) {
