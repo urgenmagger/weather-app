@@ -1,7 +1,7 @@
 import axios from 'axios'
 import prisma from '../lib/prisma'
 
-const WEATHER_API = process.env.WEATHER_API_URL || 'https://api.open-meteo.com/v1'
+const WTTR_URL = 'http://wttr.in'
 
 interface CityWeather {
   cityId: number
@@ -12,24 +12,54 @@ interface CityWeather {
   fetchedAt: Date
 }
 
+const CONDITION_MAP: Record<string, number> = {
+  sunny: 0,
+  clear: 0,
+  'partly cloudy': 1,
+  cloudy: 3,
+  overcast: 3,
+  mist: 45,
+  fog: 45,
+  'light drizzle': 51,
+  drizzle: 53,
+  'light rain': 61,
+  rain: 63,
+  'heavy rain': 65,
+  snow: 71,
+  'heavy snow': 75,
+  thunderstorm: 95,
+  'thunderstorm with hail': 96,
+}
+
+function parseWttr(raw: string): { temperature: number; windSpeed: number; weatherCode: number } {
+  const parts = raw.trim().split('|')
+  const tempStr = parts[0]?.replace(/[^+\-\d]/g, '') ?? '0'
+  const windStr = parts[1]?.replace(/[^\d]/g, '') ?? '0'
+  const condStr = (parts[2] ?? '').toLowerCase()
+
+  const temperature = parseInt(tempStr, 10) || 0
+  const windSpeed = parseInt(windStr, 10) || 0
+
+  let weatherCode = 3
+  for (const [key, code] of Object.entries(CONDITION_MAP)) {
+    if (condStr.includes(key)) {
+      weatherCode = code
+      break
+    }
+  }
+
+  return { temperature, windSpeed, weatherCode }
+}
+
 export async function fetchWeatherForCity(
   latitude: number,
   longitude: number
 ): Promise<{ temperature: number; windSpeed: number; weatherCode: number }> {
-  const { data } = await axios.get(`${WEATHER_API}/forecast`, {
-    params: {
-      latitude,
-      longitude,
-      current: 'temperature_2m,wind_speed_10m,weather_code',
-      timezone: 'auto',
-    },
+  const { data } = await axios.get(`${WTTR_URL}/${latitude},${longitude}`, {
+    params: { format: '%t|%w|%C' },
+    timeout: 10000,
   })
-
-  return {
-    temperature: data.current.temperature_2m,
-    windSpeed: data.current.wind_speed_10m,
-    weatherCode: data.current.weather_code,
-  }
+  return parseWttr(data)
 }
 
 export async function syncAllCities(): Promise<CityWeather[]> {

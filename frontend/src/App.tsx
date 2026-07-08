@@ -25,7 +25,7 @@ function App() {
       longitude: geo.longitude,
     })
     setCities((prev) => [...prev, city])
-    syncCity(city.id).then(() => loadCities())
+    syncCity(city.id).finally(() => loadCities())
   }
 
   async function handleDelete(id: number) {

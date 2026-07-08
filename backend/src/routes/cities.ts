@@ -136,4 +136,30 @@ router.post('/:id/sync', async (req: Request, res: Response) => {
   }
 })
 
+router.put('/:id/weather', async (req: Request, res: Response) => {
+  const id = Number(req.params.id)
+  const { temperature, windSpeed, weatherCode } = req.body
+
+  if (isNaN(id)) {
+    res.status(400).json({ error: 'invalid id' })
+    return
+  }
+  if (typeof temperature !== 'number' || typeof windSpeed !== 'number' || typeof weatherCode !== 'number') {
+    res.status(400).json({ error: 'temperature, windSpeed, weatherCode are required' })
+    return
+  }
+
+  const city = await prisma.city.findUnique({ where: { id } })
+  if (!city) {
+    res.status(404).json({ error: 'city not found' })
+    return
+  }
+
+  await prisma.weather.create({
+    data: { cityId: id, temperature, windSpeed, weatherCode, rawData: req.body },
+  })
+  await prisma.syncLog.create({ data: { success: true } })
+  res.json({ ok: true })
+})
+
 export default router
