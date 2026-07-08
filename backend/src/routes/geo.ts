@@ -18,7 +18,7 @@ router.get('/', async (req: Request, res: Response) => {
         params: {
           name: q.trim(),
           count: 5,
-          language: 'en',
+          language: 'ru',
         },
       }
     )
