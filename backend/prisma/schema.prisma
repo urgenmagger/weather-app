@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model City {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  latitude  Float
+  longitude Float
+  createdAt DateTime  @default(now())
+  weather   Weather[]
+}
+
+model Weather {
+  id          Int       @id @default(autoincrement())
+  cityId      Int
+  city        City      @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  temperature Float
+  windSpeed   Float
+  weatherCode Int
+  rawData     Json
+  fetchedAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  @@index([cityId, fetchedAt])
+}
