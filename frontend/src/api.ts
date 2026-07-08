@@ -1,4 +1,4 @@
-import type { City, GeoResult } from './types'
+import type { City, GeoResult, CitiesResponse } from './types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -8,11 +8,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.error || `Request failed: ${res.status}`)
   }
+  if (res.status === 204) return undefined as T
   return res.json()
 }
 
-export async function fetchCities(): Promise<City[]> {
-  return request<City[]>('/api/cities')
+export async function fetchCities(): Promise<CitiesResponse> {
+  return request<CitiesResponse>('/api/cities')
 }
 
 export async function addCity(body: {

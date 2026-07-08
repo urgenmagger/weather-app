@@ -30,6 +30,8 @@ router.get('/', async (_req: Request, res: Response) => {
   const syncFailed = lastSync && !lastSync.success
   const now = Date.now()
 
+  const serviceAvailable = !syncFailed
+
   const result = cities.map((city) => {
     const latest = city.weather[0] ?? null
     const isStale = Boolean(
@@ -55,7 +57,7 @@ router.get('/', async (_req: Request, res: Response) => {
     }
   })
 
-  res.json(result)
+  res.json({ cities: result, serviceAvailable })
 })
 
 router.post('/', async (req: Request, res: Response) => {
