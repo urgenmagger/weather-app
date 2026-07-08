@@ -29,3 +29,9 @@ model Weather {
 
   @@index([cityId, fetchedAt])
 }
+
+model SyncLog {
+  id          Int      @id @default(autoincrement())
+  success     Boolean
+  attemptedAt DateTime @default(now())
+}
